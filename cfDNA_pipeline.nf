@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 
 // Required Inputs
-refFolder      = file("/projects/vh83/reference/genomes/b37/bwa_0.7.12_index/")
+refFolder      = file("/data/janisresources/reference/hg19/fasta/")
 inputDirectory = file('./test')
 
 
@@ -10,18 +10,16 @@ params.padded_bed      = ""
 params.panel_int       = ""
 params.padded_int      = ""
 
-tmp_dir        = file('/scratch/vh83/tmp/')
+tmp_dir        = file('/tmp')
 
 // Getting Reference Files
-refBase          = "$refFolder/human_g1k_v37_decoy"
+refBase          = "$refFolder/human_g1k_v37"
 ref              = file("${refBase}.fasta")
 refDict          = file("${refBase}.dict")
 refFai           = file("${refBase}.fasta.fai")
-millsIndels      = file("${refFolder}/accessory_files/Mills_and_1000G_gold_standard.indels.b37.vcf")
-dbSNP            = file("${refFolder}/accessory_files/dbsnp_138.b37.vcf")
 header           = file("/home/jste0021/vh83/reference/genomes/b37/vcf_contig_header_lines.txt")
 af_thr           = 0.00001
-rheader          = file("/projects/vh83/pipelines/code/Rheader.txt")
+
 
 //VEP
 //Annotation resources
@@ -29,19 +27,19 @@ vep_cache      = file("/projects/vh83/reference/VEP_CACHE")
 
 
 // Tools
-picardJar          = '~/picard.jar'
-bwaModule          = 'bwa/0.7.17-gcc5'
-samtoolsModule     = 'samtools/1.9'
-gatkModule         = 'gatk/4.0.11.0' 
+picardModule       = 'picard/2.23.8'
+picardJar          = '/config/binaries/picard/2.23.8/picard.jar'
+bwaModule          = 'bwa/0.7.17'
+samtoolsModule     = 'samtools/1.13'
 rModule            = 'R/3.5.1'          
-fgbioJar           = '/fs02/vh83/local_software/fgbio/fgbio-2.0.2.jar'
-condaModule        = 'miniconda3/4.1.11-python3.5' 
+fgbioJar           = '~/fgbio-2.0.2.jar'
+
 
 // Creating channel from input directory
 Channel.fromFilePairs("$inputDirectory/*_{R1,R2}.fastq.gz", size: 2, flat: true).into{ch_inputFiles;ch_forFastqc}
 
 process runFASTQC {
-    label 'start_1_8_2h'
+    label 'start_1_16_12h'
 
     input:
         set baseName, file(R1), file(R2) from ch_forFastqc
@@ -62,14 +60,14 @@ process runFASTQC {
 
 process surecallTrimmer {
     
-    label 'start_1_16_6h'
+    label 'start_1_16_12h'
 
     input:
         set baseName, file(R1), file(R2) from ch_inputFiles
     output:
         set baseName, file("${baseName}.unmapped_R1.fastq.gz"), file("${baseName}.unmapped_R2.fastq.gz") into ch_surecall
 
-    module 'java/openjdk-1.14.02' 
+    module 'java/jdk-11' 
     module 'samtools'
     """
     bash /projects/vh83/local_software/agent3.0/agent.sh trim -fq1 ${R1} -fq2 ${R2} -v2 -out ./${baseName}.unmapped
@@ -150,15 +148,21 @@ process generateConsensusReads {
 
     script:
     """
-    java -Xmx${task.memory.toGiga() - 2}g -Djava.io.tmpdir=$tmp_dir -jar $fgbioJar CallMolecularConsensusReads \
-        --input $bam --output ${baseName}.consensus.unmapped.bam \
-        --error-rate-post-umi 30 --min-reads 3
+    if(baseName.contains('cfDNA')){
+        java -Xmx${task.memory.toGiga() - 2}g -Djava.io.tmpdir=$tmp_dir -jar $fgbioJar CallMolecularConsensusReads \
+             --input $bam --output ${baseName}.consensus.unmapped.bam \
+            --error-rate-post-umi 30 --min-reads 3
+    }else{
+        java -Xmx${task.memory.toGiga() - 2}g -Djava.io.tmpdir=$tmp_dir -jar $fgbioJar CallMolecularConsensusReads \
+             --input $bam --output ${baseName}.consensus.unmapped.bam \
+            --error-rate-post-umi 30 --min-reads 1
+    }
     """
 }
 
 process generateUMIstats {
     
-    label 'start_1_8_2h'
+    label 'start_1_12_12h'
 
     input:
         set baseName, file(bam) from ch_duplexStats
@@ -248,6 +252,8 @@ process runVardict {
     output:
         set sample, file(tbam), file(nbam), file("${sample}.${ttype}_v_${ntype}.${segment}.somatic.vardict.tsv") into ch_rawVardictSegments
  
+    module vardictModule
+
     script:
     """
     export PATH=/home/jste0021/scripts/VarDict-1.7.0/bin/:$PATH
@@ -379,7 +385,7 @@ process vt_decompose_normalise {
 }
 
 process apply_vep {
-    label 'vep_sing'
+    label 'vep'
 
     input:
         set baseName, file(vcf) from ch_vtDecomposeVCF
@@ -389,7 +395,7 @@ process apply_vep {
     publishDir path: './output/vcf/UMI', mode: 'copy', pattern: "*.vcf"
     publishDir path: './output/metrics/vep_stats', mode: 'copy', pattern: "*.html"
 
-    module 'singularity'
+    module 'vep/104.3'
 
     script:
     """
@@ -426,6 +432,7 @@ process collectHSMetrics {
 
     """
     module purge
+    module load picard 
     module load R/3.5.1
     java -Dpicard.useLegacyParser=false -Xmx${task.memory.toGiga() - 2}g -jar ${picardJar} CollectHsMetrics \
         -I ${bam} \
@@ -450,9 +457,8 @@ process multiQC {
 
     publishDir path: './output/metrics/report', mode: 'copy'
 
-    module      condaModule
-    conda       '/home/jste0021/.conda/envs/py3.5/'
-
+    module      multiqc/1.2
+    
     script:
     
     """
