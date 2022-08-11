@@ -1,6 +1,6 @@
 # cfDNA
 
-## This is the beginnings of the pipeline for a CellFree DNA project.
+### This is the beginnings of the pipeline for a CellFree DNA project.
 
 There are some caveats:
 
