@@ -2,7 +2,7 @@
 
 // Required Inputs
 refFolder      = file("/data/janisresources/reference/hg19/fasta/")
-inputDirectory = file('./test')
+inputDirectory = file('./fastqs')
 
 
 params.panel_bed       = ""
@@ -33,7 +33,8 @@ bwaModule          = 'bwa/0.7.17'
 samtoolsModule     = 'samtools/1.13'
 rModule            = 'R/3.5.1'          
 fgbioJar           = '~/fgbio-2.0.2.jar'
-
+vardictModule      = 'vardict/1.8.3'
+vardictJar         = '/config/binaries/vardict/1.8.3/bin/VarDict.jar'
 
 // Creating channel from input directory
 Channel.fromFilePairs("$inputDirectory/*_{R1,R2}.fastq.gz", size: 2, flat: true).into{ch_inputFiles;ch_forFastqc}
@@ -256,7 +257,7 @@ process runVardict {
 
     script:
     """
-    export PATH=/home/jste0021/scripts/VarDict-1.7.0/bin/:$PATH
+    export PATH=/config/binaries/vardict/1.8.3/bin/:$PATH
     VarDict -G ${ref} -f $af_thr -N "${tbam}|${nbam}" \
         -b "${tbam}|${nbam}" -th ${task.cpus} --nosv -c 1 -S 2 -E 3 -g 4 ${segment} \
         > "${sample}.${ttype}_v_${ntype}.${segment}.somatic.vardict.tsv"
