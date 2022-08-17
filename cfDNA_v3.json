@@ -1,6 +1,6 @@
 {
-"panel_int":"/fs02/vh83/reference/sureselect/Heidi_V3/3388551_Covered_b37.interval_list",
-"padded_int":"/fs02/vh83/reference/sureselect/Heidi_V3/3388551_Covered_b37.slop.interval_list",
-"panel_bed":"/fs02/vh83/reference/sureselect/Heidi_V3/3388551_Covered_b37.bed",
-"padded_bed":"/fs02/vh83/reference/sureselect/Heidi_V3/3388551_Covered_b37.slop.bed",
+"panel_int":"/home/hftekke/bed_files/Generation3/3388551_Covered_b37.interval_list",
+"padded_int":"/home/hftekke/bed_files/Generation3/3388551_Covered_b37.slop.interval_list",
+"panel_bed":"/home/hftekke/bed_files/Generation3/3388551_Covered_b37.bed",
+"padded_bed":"/home/hftekke/bed_files/Generation3/3388551_Covered_b37.slop.bed",
 }
