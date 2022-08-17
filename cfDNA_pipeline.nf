@@ -17,13 +17,13 @@ refBase          = "$refFolder/human_g1k_v37"
 ref              = file("${refBase}.fasta")
 refDict          = file("${refBase}.dict")
 refFai           = file("${refBase}.fasta.fai")
-header           = file("~/vcf_contig_header_lines.txt")
+header           = file("/home/hfettke/scripts/GitHub/cfDNA/vcf_contig_header_lines.txt")
 af_thr           = 0.00001
 
 
 //VEP
 ////Annotation resources
-vep_cache      = file("/projects/vh83/reference/VEP_CACHE")
+//vep_cache      = file("/projects/vh83/reference/VEP_CACHE")
 
 
 // Tools
@@ -71,7 +71,7 @@ process surecallTrimmer {
     module 'java/jdk-11' 
     module 'samtools'
     """
-    bash /projects/vh83/local_software/agent3.0/agent.sh trim -fq1 ${R1} -fq2 ${R2} -v2 -out ./${baseName}.unmapped
+    bash ~/agent3.0/agent.sh trim -fq1 ${R1} -fq2 ${R2} -v2 -out ./${baseName}.unmapped
     
     """
     
@@ -458,7 +458,7 @@ process multiQC {
 
     publishDir path: './output/metrics/report', mode: 'copy'
 
-    module      multiqc/1.2
+    module      'multiqc/1.2'
     
     script:
     

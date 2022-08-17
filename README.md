@@ -22,3 +22,21 @@ Roll all software dependencies will be rolled into a singularity env to make it 
 
 
 
+Software dependencies
+
+Agent 3.0 - Agilent
+https://explore.agilent.com/AGeNT-Software-Download-Form
+
+Vardict
+https://github.com/AstraZeneca-NGS/VarDictJava/releases
+
+multiQC
+picard
+bwa
+samtools
+vt
+vep
+
+fgbio
+https://github.com/fulcrumgenomics/fgbio/releases
+
