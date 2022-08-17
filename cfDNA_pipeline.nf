@@ -17,12 +17,12 @@ refBase          = "$refFolder/human_g1k_v37"
 ref              = file("${refBase}.fasta")
 refDict          = file("${refBase}.dict")
 refFai           = file("${refBase}.fasta.fai")
-header           = file("/home/jste0021/vh83/reference/genomes/b37/vcf_contig_header_lines.txt")
+header           = file("~/vcf_contig_header_lines.txt")
 af_thr           = 0.00001
 
 
 //VEP
-//Annotation resources
+////Annotation resources
 vep_cache      = file("/projects/vh83/reference/VEP_CACHE")
 
 
@@ -400,7 +400,7 @@ process apply_vep {
 
     script:
     """
-    vep --cache --dir_cache $vep_cache \
+    vep --cache \
                       --assembly GRCh37 --refseq --offline \
                       --fasta $ref \
                       --sift b --polyphen b --symbol --numbers --biotype \
